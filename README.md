@@ -85,7 +85,87 @@ The coolest thing is, because the text embedding is made up of vectors, adding a
 ![vector operation on text embedding](./assets/vec.png)    
 
 ### Self Attention  
-Self attention main function is to extract features from phrases using relationships between words depending on their text embeddings vectors.  [[7]](https://proceedings.neurips.cc/paper_files/paper/2017/hash/3f5ee243547dee91fbd053c1c4a845aa-Abstract.html)
+Self attention main function is to extract features from phrases using relationships between words depending on their text embeddings vectors. It's one of the most incredible breakthrough in machine learning field [[7]](https://proceedings.neurips.cc/paper_files/paper/2017/hash/3f5ee243547dee91fbd053c1c4a845aa-Abstract.html)    
+
+![vector operation on text embedding](./assets/att.png)    
+
+We take the vectors for each word, and turn it into a matrix.  
+For example, in language translation, a model should translate the essence of a phrase, and that doesn't necessarily mean translating everything word-by-word. You can also watch [this amazing video by google](https://www.youtube.com/watch?v=fjJOgb-E41w)  
+
+English : black cat ate the mouse  
+French : le chat noir a mange la souris  
+chat means cat, and noir means black. The french translation inverts the original word positioning, from black cat to chat noir (cat black).  
+The self-attention model aims to account for this issue by prioritizing words that are more important than the rest of the words in the phrase.  
+However, to achieve that, the model needs to know *where* the important word (or words) is.  
+To do that, we create a positional encoding of each word, than sum it into the original vector of each word.  
+
+```
+Word Embeddings:
+Word 1: [0.1, 0.2, 0.3, 0.4]
+Word 2: [0.5, 0.6, 0.7, 0.8]
+...
+
+Positional Encodings:
+Position 1: [0.9, 0.8, 0.7, 0.6]
+Position 2: [0.1, 0.2, 0.3, 0.4]
+...
+
+Input to Self-Attention:
+Word 1 + Position 1 = [1.0, 1.0, 1.0, 1.0]
+Word 2 + Position 2 = [0.6, 0.8, 1.0, 1.2]
+...
+```
+Now, we need to determine the important words in the phrase and its relationship with other words, such as negation, contradiction, emphasize, etc.  
+
+![relationship between words](./assets/att2.png)    
+
+To do this, we use the query, key and value calculation.  
+The self-attention mechanism computes attention scores between the query vector of a word and the key vectors of all the words in the sequence. These attention scores are then used to weight the value vectors, resulting in an output vector for the query word. The output vector captures information from the parts of the sequence that are most relevant to the query word, and this process is performed for each word in the sequence.  
+
+the query, key, and value vectors are used in self-attention to determine how much attention each word should pay to other words in the sequence, and the weighted values are aggregated to create meaningful representations for each word.   
+
+Unfortunately, we cannot influence this calculation in any way. And if we can't influence, that means we can't train it.  
+To solve this, we add a simple linear neural network as a parameter to the query, key and value before they are calculated. This parameter is called hidden layer  
+
+![hiddenlayer](./assets/hiddenlayer.png)    
+
+## Combining Image and Word Layer  
+
+![combination between image and word layer](./assets/combination.png)   
+
+We have convolutional encoder to encode image into an embedding.  
+We have self attention to encode text into an embedding.  
+That means perfectly labeled images should have very similar image embedding and text embedding.  
+To combine these two together, we have to inject our self attention text encoder into our u-net convolutional encoder at every step of noise-denoise proccess.  
+
+![combination between image and word layer](./assets/inject.png)   
+
+However, when applied in this manner, we need to use cross-attention model instead of self-attention model.  
+Self attention model operates on one set of data (text), while cross-attention model operates on two sets of data (image and text prompts)  
+
+![cross attention layer](./assets/crossattention.png)   
+
+The query is the image, while the key and value is the text prompt. This allows the model to generate all the objects and their relationship to other objects based on the text prompt.   
+
+With this architecture, we're able to train the model by feeding it (perfectly) labeled images. The model will figure out the context of the label and the image. Finally, the model will generate new images using new text prompts based on the knowledge of the contexts and images it learned during the data training session.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
